@@ -14,56 +14,88 @@ import java.awt.event.ActionListener;
  * etykiecie statusu na dole okna.
  */
 
+import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 public class KalkulatorWalut extends JFrame {
-    private JLabel lblTytul;
-    private JLabel lblKwota;
-    private JTextField txtKwota;
-    private JButton btnAdd;
-    private JLabel lblStatus;
+    private JTextField poleKwota;
+    private JLabel etykietaStatusu;
+    private JButton przyciskPrzelicz;
 
     public KalkulatorWalut() {
-        setTitle("Kalkulator Walut");
-        setSize(400, 120);
+        // Konfiguracja podstawowa okna głównego
+        setTitle("Kalkulator Walut (PLN -> EUR)");
+        setSize(400, 180);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //BorderLayout layout = new BorderLayout(5, 5);//jawna definicja
-        //setLayout(layout);
-        setLayout(new BorderLayout(5, 5));//sposób anonimowy
         setLocationRelativeTo(null);
-        lblTytul = new JLabel("Kalkulator Walut", SwingConstants.CENTER);//wyśrodkowuję napis
-        add(lblTytul, BorderLayout.NORTH);//napis w północnym rejonie
+        setLayout(new BorderLayout(10, 10));
 
-        //panel w rejonie centr
-        JPanel panelCentr = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        add(panelCentr, BorderLayout.CENTER);
+        // === REGION NORTH: Nagłówek okna ===
+        JLabel etykietaNaglowek = new JLabel("Kalkulator walut", SwingConstants.CENTER);
+        etykietaNaglowek.setFont(new Font("Arial", Font.BOLD, 18));
+        etykietaNaglowek.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        add(etykietaNaglowek, BorderLayout.NORTH);
 
-        //kontrolki dla panelu centralnego
-        lblKwota = new JLabel("Kwota PLN", SwingConstants.CENTER);
-        txtKwota = new JTextField(8);
-        btnAdd = new JButton("Przelicz na EUR");
+        // === REGION CENTER: Panel roboczy z FlowLayout ===
+        JPanel panelSrodkowy = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 15));
+        JLabel etykietaKwota = new JLabel("Kwota (PLN):");
+        poleKwota = new JTextField(8);
+        przyciskPrzelicz = new JButton("Przelicz na EUR");
 
-        panelCentr.add(lblKwota);
-        panelCentr.add(txtKwota);
-        panelCentr.add(btnAdd);
+        panelSrodkowy.add(etykietaKwota);
+        panelSrodkowy.add(poleKwota);
+        panelSrodkowy.add(przyciskPrzelicz);
+        add(panelSrodkowy, BorderLayout.CENTER);
 
-        lblStatus = new JLabel("Gotowy", SwingConstants.CENTER);
-        add(lblStatus, BorderLayout.SOUTH);
+        // === REGION SOUTH: Pasek statusu ===
+        etykietaStatusu = new JLabel("Gotowy", SwingConstants.CENTER);
+        etykietaStatusu.setFont(new Font("Arial", Font.PLAIN, 12));
+        etykietaStatusu.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        add(etykietaStatusu, BorderLayout.SOUTH);
 
-        btnAdd.addActionListener(new ActionListener() {
+        // Obsługa kliknięcia przycisku przeliczenia
+        przyciskPrzelicz.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                try{
-                    double pln = Double.parseDouble(txtKwota.getText());
+                try {
+                    String tekstKwota = poleKwota.getText().trim();
+                    double pln = Double.parseDouble(tekstKwota);
+
+                    // Warunek sprawdzający logiczną poprawność kwoty finansowej
+                    if (pln < 0) {
+                        throw new IllegalArgumentException("Kwota nie może być ujemna!");
+                    }
+
+                    // Przeliczenie złotówek na euro (kurs: 1 EUR = 4.25 PLN)
                     double eur = pln / 4.25;
-                    lblStatus.setText(String.format("EUR: %.2f", eur));
-                }catch (NumberFormatException ex){
-                    lblStatus.setText("Błąd! Liczba powinna być rzeczywistą.");
-                    txtKwota.setText("");
+
+                    // Wyświetlenie sformatowanego wyniku w pasku statusu
+                    etykietaStatusu.setText(String.format("Wynik: %.2f PLN to %.2f EUR", pln, eur));
+                    etykietaStatusu.setForeground(new Color(0, 100, 0));
+
+                } catch (NumberFormatException ex) {
+                    // Przechwycenie błędu błędnego formatu liczby
+                    etykietaStatusu.setText("Błąd: Wpisz poprawną kwotę!");
+                    etykietaStatusu.setForeground(Color.RED);
+                    poleKwota.requestFocus();
+                    poleKwota.selectAll();
+
+                } catch (IllegalArgumentException ex) {
+                    // Przechwycenie błędu ujemnej wartości liczbowej
+                    etykietaStatusu.setText("Błąd: " + ex.getMessage());
+                    etykietaStatusu.setForeground(Color.RED);
+                    poleKwota.requestFocus();
+                    poleKwota.selectAll();
                 }
             }
         });
-
         setVisible(true);
     }
-
     public static void main(String[] args) {
         new KalkulatorWalut();
     }
